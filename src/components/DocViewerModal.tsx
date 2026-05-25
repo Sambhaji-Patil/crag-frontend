@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDocViewer } from '../contexts/DocViewerContext'
-
-const BASE = import.meta.env.VITE_API_URL ?? ''
+import { API_BASE } from '../lib/api'
 
 export function DocViewerModal() {
   const { viewer, close } = useDocViewer()
@@ -25,8 +24,8 @@ export function DocViewerModal() {
   const isPdf = viewer?.filename.toLowerCase().endsWith('.pdf') ?? false
   const iframeSrc = viewer
     ? isPdf
-      ? `${BASE}/documents/${encodeURIComponent(viewer.collection)}/raw#page=${page}`
-      : `${BASE}/documents/${encodeURIComponent(viewer.collection)}/raw`
+      ? `${API_BASE}/documents/${encodeURIComponent(viewer.collection)}/raw#page=${page}`
+      : `${API_BASE}/documents/${encodeURIComponent(viewer.collection)}/raw`
     : ''
 
   function navigate(newPage: number) {

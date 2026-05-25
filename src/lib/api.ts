@@ -1,6 +1,6 @@
 import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult } from '../types'
 
-const BASE = import.meta.env.VITE_API_URL ?? 'https://quantumbit-crag.hf.space'
+export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://quantumbit-crag.hf.space'
 
 // ── Query pipeline ──────────────────────────────────────────────────────────
 
@@ -11,7 +11,7 @@ export async function* streamPipeline(
   retrievalMode: string = 'hybrid',
   docCollections: string[] = []
 ): AsyncGenerator<PipelineEvent> {
-  const res = await fetch(`${BASE}/query/pipeline`, {
+  const res = await fetch(`${API_BASE}/query/pipeline`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -63,7 +63,7 @@ export async function uploadFile(
   const form = new FormData()
   form.append('file', file)
 
-  const res = await fetch(`${BASE}/ingest/file?collection_name=${encodeURIComponent(sessionId)}`, {
+  const res = await fetch(`${API_BASE}/ingest/file?collection_name=${encodeURIComponent(sessionId)}`, {
     method: 'POST',
     body: form,
   })
@@ -80,7 +80,7 @@ export function watchIngestJob(
   jobId: string,
   onUpdate: (job: IngestJob) => void
 ): () => void {
-  const es = new EventSource(`${BASE}/ingest/jobs/${jobId}/events`)
+  const es = new EventSource(`${API_BASE}/ingest/jobs/${jobId}/events`)
 
   es.onmessage = (e) => {
     try {
@@ -98,7 +98,7 @@ export function watchIngestJob(
 // ── Visualization ────────────────────────────────────────────────────────────
 
 export async function fetchCollectionViz(collection: string): Promise<VizPoint[]> {
-  const res = await fetch(`${BASE}/collections/${encodeURIComponent(collection)}/viz`)
+  const res = await fetch(`${API_BASE}/collections/${encodeURIComponent(collection)}/viz`)
   if (!res.ok) throw new Error(`Viz fetch failed: ${res.status}`)
   const data = await res.json()
   return data.points as VizPoint[]
@@ -110,7 +110,7 @@ export async function fetchQuerySimilarity(
   signal?: AbortSignal
 ): Promise<QuerySimilarityResult> {
   const res = await fetch(
-    `${BASE}/collections/${encodeURIComponent(collection)}/query_similarity`,
+    `${API_BASE}/collections/${encodeURIComponent(collection)}/query_similarity`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
