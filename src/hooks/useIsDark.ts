@@ -1,0 +1,16 @@
+import { useEffect, useState } from 'react'
+
+/** Reactively tracks whether the 'dark' class is on <html>. */
+export function useIsDark(): boolean {
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.classList.contains('dark')
+  )
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    })
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
+  return isDark
+}

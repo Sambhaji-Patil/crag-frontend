@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* CSS custom properties — light defaults, dark overrides */
+  :root {
+    --shadow-brutal-muted: #d4d4d8;
+  }
+  .dark {
+    --shadow-brutal-muted: #27272a;
+  }
+
+  body {
+    background-color: #fafafa;
+    color: #18181b;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dark body {
+    background-color: #09090b;
+    color: #f4f4f5;
+  }
+
+  /* Dot-grid background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dark body::before {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  #root {
+    position: relative;
+    z-index: 1;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #e4e4e7;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #a1a1aa;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7c3aed;
+  }
+  html.dark ::-webkit-scrollbar-track {
+    background: #18181b;
+  }
+  html.dark ::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800;
+  }
+
+  .card-brutal {
+    @apply card shadow-brutal-muted;
+  }
+
+  .label-upper {
+    @apply text-[10px] font-bold tracking-widest uppercase text-zinc-500;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase border;
+  }
+
+  .badge-green {
+    @apply badge border-emerald-500 text-emerald-500 dark:text-emerald-400 bg-emerald-500/10;
+  }
+
+  .badge-red {
+    @apply badge border-red-500 text-red-500 dark:text-red-400 bg-red-500/10;
+  }
+
+  .badge-violet {
+    @apply badge border-violet-500 text-violet-500 dark:text-violet-400 bg-violet-500/10;
+  }
+
+  .badge-amber {
+    @apply badge border-amber-500 text-amber-500 dark:text-amber-400 bg-amber-500/10;
+  }
+
+  .badge-zinc {
+    @apply badge border-zinc-400 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800;
+  }
+
+  /* Cursor blink for streaming */
+  .cursor-blink::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+    color: #7c3aed;
+  }
+}
+
+/* Score bar fill animation */
+.score-bar {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
