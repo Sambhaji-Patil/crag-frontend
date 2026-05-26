@@ -87,7 +87,7 @@ export function WorkspacePanel({ sessionId, docs, onDocsChange, embeddingMode, s
         }
       }
     },
-    [sessionId, onDocsChange, upsertDoc]
+    [sessionId, onDocsChange, upsertDoc, embeddingMode]
   )
 
   const onDrop = useCallback(
