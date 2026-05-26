@@ -62,6 +62,15 @@ export interface IngestedDoc {
   collection?: string   // per-doc FAISS sub-collection name returned by backend
 }
 
+export interface TryDoc {
+  filename: string
+  collection: string
+  chunks: number
+  embedding_mode?: string | null
+  size_mb?: number
+  ready: boolean
+}
+
 export interface VizPoint {
   doc_id: string
   x: number

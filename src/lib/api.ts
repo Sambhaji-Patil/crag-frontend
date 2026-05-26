@@ -1,4 +1,4 @@
-import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult } from '../types'
+import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult, TryDoc } from '../types'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://quantumbit-crag.hf.space'
 
@@ -107,6 +107,15 @@ export async function fetchEmbeddingInfo(): Promise<{ default_mode: string; devi
   const res = await fetch(`${API_BASE}/embeddings/info`)
   if (!res.ok) throw new Error(`Embeddings info failed: ${res.status}`)
   return res.json() as Promise<{ default_mode: string; device: string }>
+}
+
+// ── Try Docs ───────────────────────────────────────────────────────────────
+
+export async function fetchTryDocs(): Promise<TryDoc[]> {
+  const res = await fetch(`${API_BASE}/try_docs`)
+  if (!res.ok) throw new Error(`Try Docs fetch failed: ${res.status}`)
+  const data = await res.json() as { docs: TryDoc[] }
+  return data.docs
 }
 
 // ── Visualization ────────────────────────────────────────────────────────────

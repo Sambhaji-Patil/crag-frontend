@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback, useEffect, type CSSProperties, type Dispatch, type SetStateAction } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { uploadFile, watchIngestJob } from '../lib/api'
+import { uploadFile, watchIngestJob, fetchTryDocs } from '../lib/api'
 import { useDocViewer } from '../contexts/DocViewerContext'
 import { useEmbeddingViz } from '../contexts/EmbeddingVizContext'
-import type { IngestedDoc } from '../types'
+import type { IngestedDoc, TryDoc } from '../types'
 
 interface Props {
   sessionId: string
@@ -18,6 +18,9 @@ export function WorkspacePanel({ sessionId, docs, onDocsChange, embeddingMode, s
   const inputRef = useRef<HTMLInputElement>(null)
   const { open: openViewer } = useDocViewer()
   const { openViz } = useEmbeddingViz()
+  const [tryDocs, setTryDocs] = useState<TryDoc[]>([])
+  const [tryDocsLoading, setTryDocsLoading] = useState(false)
+  const [tryDocsError, setTryDocsError] = useState<string | null>(null)
 
   // Auto-open embedding viz when a doc finishes ingesting
   const prevDoneRef = useRef(new Set<string>())
@@ -30,6 +33,21 @@ export function WorkspacePanel({ sessionId, docs, onDocsChange, embeddingMode, s
       }
     }
   }, [docs, openViz])
+
+  const refreshTryDocs = useCallback(() => {
+    setTryDocsLoading(true)
+    setTryDocsError(null)
+    fetchTryDocs()
+      .then((items) => setTryDocs(items))
+      .catch((err) => {
+        setTryDocsError(err instanceof Error ? err.message : 'Failed to load Try Docs')
+      })
+      .finally(() => setTryDocsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    refreshTryDocs()
+  }, [refreshTryDocs])
 
   const upsertDoc = useCallback(
     (doc: IngestedDoc) =>
@@ -88,6 +106,29 @@ export function WorkspacePanel({ sessionId, docs, onDocsChange, embeddingMode, s
       }
     },
     [sessionId, onDocsChange, upsertDoc, embeddingMode]
+  )
+
+  const addTryDoc = useCallback(
+    (doc: TryDoc) => {
+      if (!doc.ready) return
+      onDocsChange((prev) => {
+        const exists = prev.some((d) => d.collection === doc.collection)
+        if (exists) return prev
+        return [
+          ...prev,
+          {
+            filename: doc.filename,
+            jobId: `try-${doc.collection}`,
+            chunks: doc.chunks,
+            status: 'done',
+            progress: 100,
+            message: 'ready',
+            collection: doc.collection,
+          },
+        ]
+      })
+    },
+    [onDocsChange]
   )
 
   const onDrop = useCallback(
@@ -159,6 +200,64 @@ export function WorkspacePanel({ sessionId, docs, onDocsChange, embeddingMode, s
             className="hidden"
             onChange={(e) => e.target.files && handleFiles(e.target.files)}
           />
+        </div>
+      </div>
+
+      {/* Try Docs */}
+      <div className="p-4 border-b-2 border-zinc-200 dark:border-zinc-800 flex-shrink-0">
+        <div className="flex items-center justify-between mb-3">
+          <p className="label-upper">Try Docs</p>
+          <button
+            onClick={refreshTryDocs}
+            className="text-[10px] font-mono text-zinc-400 hover:text-violet-500"
+            title="Refresh"
+          >
+            refresh
+          </button>
+        </div>
+
+        {tryDocsLoading && (
+          <p className="text-[10px] text-zinc-400">Loading…</p>
+        )}
+        {!tryDocsLoading && tryDocsError && (
+          <p className="text-[10px] text-red-500">{tryDocsError}</p>
+        )}
+        {!tryDocsLoading && !tryDocsError && tryDocs.length === 0 && (
+          <p className="text-[10px] text-zinc-400">No Try Docs found</p>
+        )}
+
+        <div className="space-y-2">
+          {tryDocs.map((doc) => {
+            const added = docs.some((d) => d.collection === doc.collection)
+            return (
+              <div
+                key={doc.collection}
+                className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-2 flex items-center gap-2"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400 truncate" title={doc.filename}>
+                    {doc.filename}
+                  </p>
+                  <p className="label-upper text-zinc-400 dark:text-zinc-600">
+                    {doc.ready ? `${doc.chunks} chunks` : 'index missing'}
+                  </p>
+                </div>
+                <button
+                  disabled={!doc.ready || added}
+                  onClick={() => addTryDoc(doc)}
+                  className={`text-[10px] font-mono border px-2 py-1 transition-colors ${
+                    added
+                      ? 'border-emerald-400 text-emerald-600 cursor-default'
+                      : doc.ready
+                      ? 'border-zinc-300 text-zinc-500 hover:border-violet-500 hover:text-violet-600'
+                      : 'border-zinc-200 text-zinc-300 cursor-not-allowed'
+                  }`}
+                >
+                  {added ? 'added' : 'add'}
+                </button>
+              </div>
+            )
+          })}
         </div>
       </div>
 
