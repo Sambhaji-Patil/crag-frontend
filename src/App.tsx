@@ -11,7 +11,7 @@ import { EmbeddingVizProvider } from './contexts/EmbeddingVizContext'
 import { useSession } from './hooks/useSession'
 import { useTheme } from './hooks/useTheme'
 import { streamPipeline, fetchEmbeddingInfo } from './lib/api'
-import type { ChatMessage, IngestedDoc, PipelineStep, Source } from './types'
+import type { ChatMessage, IngestedDoc, PipelineStep, Source, RetrievalSettings } from './types'
 
 function uuid() {
   return crypto.randomUUID()
@@ -30,6 +30,14 @@ export default function App() {
 
   // Retrieval mode
   const [retrievalMode, setRetrievalMode] = useState('hybrid')
+
+  const [retrievalSettings, setRetrievalSettings] = useState<RetrievalSettings>({
+    topK: 6,
+    topKRetrieval: 20,
+    mmrLambda: 0.6,
+    bm25Weight: 0.4,
+    vectorWeight: 0.6,
+  })
 
   // Embedding mode
   const [embeddingMode, setEmbeddingMode] = useState('bge-large')
@@ -94,7 +102,8 @@ export default function App() {
         history,
         retrievalMode,
         docCollections,
-        embeddingMode
+        embeddingMode,
+        retrievalSettings
       )) {
         if (event.event === 'cache_check' && !tryDocsOnly) {
           continue
@@ -181,6 +190,8 @@ export default function App() {
           onQuery={handleQuery}
           retrievalMode={retrievalMode}
           onRetrievalModeChange={setRetrievalMode}
+          retrievalSettings={retrievalSettings}
+          onRetrievalSettingsChange={setRetrievalSettings}
           embeddingMode={embeddingMode}
           onEmbeddingModeChange={setEmbeddingMode}
           embeddingRecommendedMode={embeddingRecommendedMode}

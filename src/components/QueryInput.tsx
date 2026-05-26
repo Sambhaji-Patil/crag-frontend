@@ -31,6 +31,20 @@ interface Props {
   hasDocuments: boolean
   retrievalMode: string
   onRetrievalModeChange: (mode: string) => void
+  retrievalSettings: {
+    topK: number
+    topKRetrieval: number
+    mmrLambda: number
+    bm25Weight: number
+    vectorWeight: number
+  }
+  onRetrievalSettingsChange: (settings: {
+    topK: number
+    topKRetrieval: number
+    mmrLambda: number
+    bm25Weight: number
+    vectorWeight: number
+  }) => void
   embeddingMode: string
   onEmbeddingModeChange: (mode: string) => void
   embeddingRecommendedMode?: string
@@ -44,6 +58,8 @@ export function QueryInput({
   hasDocuments,
   retrievalMode,
   onRetrievalModeChange,
+  retrievalSettings,
+  onRetrievalSettingsChange,
   embeddingMode,
   onEmbeddingModeChange,
   embeddingRecommendedMode,
@@ -52,6 +68,7 @@ export function QueryInput({
 }: Props) {
   const [value, setValue] = useState('')
   const [embedLockMessage, setEmbedLockMessage] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lockTimerRef = useRef<number | null>(null)
 
@@ -101,6 +118,17 @@ export function QueryInput({
     : 'this system'
   const embeddingLocked = hasDocuments
 
+  function updateSetting<K extends keyof typeof retrievalSettings>(key: K, value: number) {
+    const next = { ...retrievalSettings, [key]: value }
+    if (key === 'topK' && value > retrievalSettings.topKRetrieval) {
+      next.topKRetrieval = value
+    }
+    if (key === 'topKRetrieval' && value < retrievalSettings.topK) {
+      next.topK = value
+    }
+    onRetrievalSettingsChange(next)
+  }
+
   function notifyEmbeddingLocked() {
     setEmbedLockMessage('Embeddings are locked for this session. Start a new session to change them.')
     if (lockTimerRef.current !== null) {
@@ -138,7 +166,113 @@ export function QueryInput({
             </button>
           )
         })}
+        <button
+          type="button"
+          onClick={() => setShowSettings((v) => !v)}
+          className={`
+            ml-auto px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase border
+            transition-all duration-150
+            ${showSettings
+              ? 'border-zinc-800 bg-zinc-900 text-zinc-100 dark:border-zinc-300 dark:bg-zinc-100 dark:text-zinc-900'
+              : 'border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 bg-transparent hover:border-zinc-400 dark:hover:border-zinc-600'
+            }
+          `}
+          title="Retrieval settings"
+        >
+          Settings
+        </button>
       </div>
+
+      {showSettings && (
+        <div className="mb-3 border-2 border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 px-3 py-3">
+          <p className="label-upper text-zinc-500 dark:text-zinc-600 mb-2">Retrieval parameters</p>
+
+          <div className="grid gap-3">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="label-upper text-zinc-400">Final top-k</span>
+                <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300 font-bold">{retrievalSettings.topK}</span>
+              </div>
+              <input
+                type="range"
+                min={2}
+                max={20}
+                step={1}
+                value={retrievalSettings.topK}
+                onChange={(e) => updateSetting('topK', Number(e.target.value))}
+                className="w-full accent-violet-600"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="label-upper text-zinc-400">Retrieval pool</span>
+                <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300 font-bold">{retrievalSettings.topKRetrieval}</span>
+              </div>
+              <input
+                type="range"
+                min={5}
+                max={60}
+                step={1}
+                value={retrievalSettings.topKRetrieval}
+                onChange={(e) => updateSetting('topKRetrieval', Number(e.target.value))}
+                className="w-full accent-violet-600"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="label-upper text-zinc-400">MMR lambda</span>
+                <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300 font-bold">{retrievalSettings.mmrLambda.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={retrievalSettings.mmrLambda}
+                onChange={(e) => updateSetting('mmrLambda', Number(e.target.value))}
+                className="w-full accent-emerald-500"
+              />
+              <p className="label-upper text-zinc-400 mt-1">Used for MMR only</p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="label-upper text-zinc-400">BM25 weight</span>
+                <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300 font-bold">{retrievalSettings.bm25Weight.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={retrievalSettings.bm25Weight}
+                onChange={(e) => updateSetting('bm25Weight', Number(e.target.value))}
+                className="w-full accent-amber-500"
+              />
+              <p className="label-upper text-zinc-400 mt-1">Hybrid weight</p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="label-upper text-zinc-400">Vector weight</span>
+                <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300 font-bold">{retrievalSettings.vectorWeight.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={retrievalSettings.vectorWeight}
+                onChange={(e) => updateSetting('vectorWeight', Number(e.target.value))}
+                className="w-full accent-emerald-500"
+              />
+              <p className="label-upper text-zinc-400 mt-1">Hybrid weight</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Embedding selector */}
       <div className="flex items-center gap-1.5 mb-3">

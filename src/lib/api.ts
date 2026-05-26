@@ -1,4 +1,4 @@
-import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult, TryDoc } from '../types'
+import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult, TryDoc, RetrievalSettings } from '../types'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://quantumbit-crag.hf.space'
 
@@ -10,7 +10,8 @@ export async function* streamPipeline(
   history: { role: string; content: string }[],
   retrievalMode: string = 'hybrid',
   docCollections: string[] = [],
-  embeddingMode: string = 'auto'
+  embeddingMode: string = 'auto',
+  retrievalSettings?: RetrievalSettings
 ): AsyncGenerator<PipelineEvent> {
   const res = await fetch(`${API_BASE}/query/pipeline`, {
     method: 'POST',
@@ -23,6 +24,11 @@ export async function* streamPipeline(
       stream: false,
       retrieval_mode: retrievalMode,
       embedding_mode: embeddingMode,
+      top_k: retrievalSettings?.topK,
+      top_k_retrieval: retrievalSettings?.topKRetrieval,
+      mmr_lambda: retrievalSettings?.mmrLambda,
+      bm25_weight: retrievalSettings?.bm25Weight,
+      vector_weight: retrievalSettings?.vectorWeight,
       doc_collections: docCollections.length > 0 ? docCollections : null,
     }),
   })

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ChatMessage, StreamingBubble } from './ChatMessage'
 import { QueryInput } from './QueryInput'
 import { QuerySimilarityGraph } from './QuerySimilarityGraph'
-import type { ChatMessage as ChatMessageType, IngestedDoc } from '../types'
+import type { ChatMessage as ChatMessageType, IngestedDoc, RetrievalSettings } from '../types'
 
 interface Props {
   messages: ChatMessageType[]
@@ -13,6 +13,8 @@ interface Props {
   onQuery: (query: string) => void
   retrievalMode: string
   onRetrievalModeChange: (mode: string) => void
+  retrievalSettings: RetrievalSettings
+  onRetrievalSettingsChange: (settings: RetrievalSettings) => void
   embeddingMode: string
   onEmbeddingModeChange: (mode: string) => void
   embeddingRecommendedMode?: string
@@ -28,6 +30,8 @@ export function ChatPanel({
   onQuery,
   retrievalMode,
   onRetrievalModeChange,
+  retrievalSettings,
+  onRetrievalSettingsChange,
   embeddingMode,
   onEmbeddingModeChange,
   embeddingRecommendedMode,
@@ -132,6 +136,8 @@ export function ChatPanel({
         hasDocuments={hasDocuments}
         retrievalMode={retrievalMode}
         onRetrievalModeChange={onRetrievalModeChange}
+        retrievalSettings={retrievalSettings}
+        onRetrievalSettingsChange={onRetrievalSettingsChange}
         embeddingMode={embeddingMode}
         onEmbeddingModeChange={onEmbeddingModeChange}
         embeddingRecommendedMode={embeddingRecommendedMode}

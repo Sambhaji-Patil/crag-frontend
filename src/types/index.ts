@@ -86,3 +86,11 @@ export interface QuerySimilarityResult {
   query: { x: number; y: number } | null
   chunks: VizPoint[]
 }
+
+export interface RetrievalSettings {
+  topK: number
+  topKRetrieval: number
+  mmrLambda: number
+  bm25Weight: number
+  vectorWeight: number
+}
