@@ -115,7 +115,7 @@ function StepDetail({ step }: { step: PipelineStep }) {
                 <motion.div
                   className={`h-full ${c.score > 0.8 ? 'bg-emerald-500' : c.score > 0.6 ? 'bg-amber-500' : 'bg-zinc-400 dark:bg-zinc-500'}`}
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.round(c.score * 100)}%` }}
+                  animate={{ width: `${Math.min(100, Math.max(0, Math.round(c.score * 100)))}%` }}
                   transition={{ duration: 0.5, delay: i * 0.06 + 0.1 }}
                 />
               </div>
@@ -217,10 +217,10 @@ function StepRow({ step, index, prevArrivedAt }: StepRowProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.22, delay: index * 0.03 }}
-      className="pl-3 border-l-2 border-zinc-200 dark:border-zinc-800 hover:border-violet-400 dark:hover:border-violet-800 transition-colors py-0.5"
+      initial={{ opacity: 0, height: 0, y: -10 }}
+      animate={{ opacity: 1, height: 'auto', y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24, delay: index * 0.04 }}
+      className="pl-3 border-l-2 border-zinc-200 dark:border-zinc-800 hover:border-violet-400 dark:hover:border-violet-800 transition-colors py-0.5 overflow-hidden"
     >
       <div className="flex items-center gap-2">
         <span className={`font-mono text-xs ${statusColor(step.status)}`}>

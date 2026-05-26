@@ -19,7 +19,7 @@ export function SourceCards({ sources }: Props) {
       <div className="space-y-1">
         {sources.map((src) => {
           const isOpen = open === src.doc_id
-          const pct = Math.round(src.relevance_score * 100)
+          const pct = Math.min(100, Math.max(0, Math.round(src.relevance_score * 100)))
           const scoreColor =
             src.relevance_score > 0.8
               ? 'text-emerald-500 dark:text-emerald-400'
