@@ -9,10 +9,11 @@ interface Props {
   sessionId: string
   docs: IngestedDoc[]
   onDocsChange: Dispatch<SetStateAction<IngestedDoc[]>>
+  embeddingMode: string
   style?: CSSProperties
 }
 
-export function WorkspacePanel({ sessionId, docs, onDocsChange, style }: Props) {
+export function WorkspacePanel({ sessionId, docs, onDocsChange, embeddingMode, style }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { open: openViewer } = useDocViewer()
@@ -53,7 +54,7 @@ export function WorkspacePanel({ sessionId, docs, onDocsChange, style }: Props) 
         ])
 
         try {
-          const { job_id } = await uploadFile(file, sessionId)
+          const { job_id } = await uploadFile(file, sessionId, embeddingMode)
 
           onDocsChange((prev) => [
             ...prev.filter((d) => d.jobId !== placeholderId),

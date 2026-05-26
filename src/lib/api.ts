@@ -9,7 +9,8 @@ export async function* streamPipeline(
   sessionId: string,
   history: { role: string; content: string }[],
   retrievalMode: string = 'hybrid',
-  docCollections: string[] = []
+  docCollections: string[] = [],
+  embeddingMode: string = 'auto'
 ): AsyncGenerator<PipelineEvent> {
   const res = await fetch(`${API_BASE}/query/pipeline`, {
     method: 'POST',
@@ -21,6 +22,7 @@ export async function* streamPipeline(
       history,
       stream: false,
       retrieval_mode: retrievalMode,
+      embedding_mode: embeddingMode,
       doc_collections: docCollections.length > 0 ? docCollections : null,
     }),
   })
@@ -58,15 +60,19 @@ export async function* streamPipeline(
 
 export async function uploadFile(
   file: File,
-  sessionId: string
+  sessionId: string,
+  embeddingMode: string = 'auto'
 ): Promise<{ job_id: string }> {
   const form = new FormData()
   form.append('file', file)
 
-  const res = await fetch(`${API_BASE}/ingest/file?collection_name=${encodeURIComponent(sessionId)}`, {
+  const res = await fetch(
+    `${API_BASE}/ingest/file?collection_name=${encodeURIComponent(sessionId)}&embedding_mode=${encodeURIComponent(embeddingMode)}`,
+    {
     method: 'POST',
     body: form,
-  })
+    }
+  )
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'Upload failed' }))
@@ -93,6 +99,14 @@ export function watchIngestJob(
   es.onerror = () => es.close()
 
   return () => es.close()
+}
+
+// ── Embeddings ─────────────────────────────────────────────────────────────
+
+export async function fetchEmbeddingInfo(): Promise<{ default_mode: string; device: string }> {
+  const res = await fetch(`${API_BASE}/embeddings/info`)
+  if (!res.ok) throw new Error(`Embeddings info failed: ${res.status}`)
+  return res.json() as Promise<{ default_mode: string; device: string }>
 }
 
 // ── Visualization ────────────────────────────────────────────────────────────

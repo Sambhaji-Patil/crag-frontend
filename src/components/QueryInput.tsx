@@ -7,16 +7,49 @@ const MODES = [
   { id: 'mmr',    label: 'MMR',    title: 'Maximal Marginal Relevance (diverse results)' },
 ]
 
+const EMBEDDINGS = [
+  {
+    id: 'bge-large',
+    label: 'BGE-LARGE (1024)',
+    hint: 'Best quality. Fast on GPU, slow on CPU.',
+  },
+  {
+    id: 'openai-small',
+    label: 'OPENAI-SMALL (1536)',
+    hint: 'Fast on CPU via API. Uses OpenAI embeddings.',
+  },
+  {
+    id: 'bge-small',
+    label: 'BGE-SMALL (384)',
+    hint: 'Fastest local CPU option. Lower recall than BGE-LARGE.',
+  },
+]
+
 interface Props {
   onSubmit: (query: string) => void
   disabled: boolean
   hasDocuments: boolean
   retrievalMode: string
   onRetrievalModeChange: (mode: string) => void
+  embeddingMode: string
+  onEmbeddingModeChange: (mode: string) => void
+  embeddingRecommendedMode?: string
+  embeddingDevice?: string
   onQueryChange?: (query: string) => void
 }
 
-export function QueryInput({ onSubmit, disabled, hasDocuments, retrievalMode, onRetrievalModeChange, onQueryChange }: Props) {
+export function QueryInput({
+  onSubmit,
+  disabled,
+  hasDocuments,
+  retrievalMode,
+  onRetrievalModeChange,
+  embeddingMode,
+  onEmbeddingModeChange,
+  embeddingRecommendedMode,
+  embeddingDevice,
+  onQueryChange,
+}: Props) {
   const [value, setValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -51,6 +84,12 @@ export function QueryInput({ onSubmit, disabled, hasDocuments, retrievalMode, on
     ? 'Processing pipeline…'
     : 'Ask a question about your documents  (Enter to send)'
 
+  const deviceLabel = embeddingDevice === 'cuda'
+    ? 'GPU'
+    : embeddingDevice === 'cpu'
+    ? 'CPU'
+    : 'this system'
+
   return (
     <div className="border-t-2 border-zinc-200 dark:border-zinc-800 p-4 flex-shrink-0 bg-zinc-50 dark:bg-zinc-950">
       {/* Retrieval mode selector */}
@@ -75,6 +114,35 @@ export function QueryInput({ onSubmit, disabled, hasDocuments, retrievalMode, on
               `}
             >
               {m.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Embedding selector */}
+      <div className="flex items-center gap-1.5 mb-3">
+        <span className="label-upper mr-1">Embeddings</span>
+        {EMBEDDINGS.map((e) => {
+          const isActive = embeddingMode === e.id
+          const isRecommended = embeddingRecommendedMode === e.id
+          const title = `${e.hint} ${isRecommended ? `Recommended on ${deviceLabel}.` : 'Optional.'}`
+          return (
+            <button
+              key={e.id}
+              onClick={() => onEmbeddingModeChange(e.id)}
+              disabled={disabled}
+              title={title}
+              className={`
+                px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase border
+                transition-all duration-150
+                ${isActive
+                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-brutal-sm'
+                  : 'border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 bg-transparent hover:border-zinc-400 dark:hover:border-zinc-600'
+                }
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              `}
+            >
+              {e.label}
             </button>
           )
         })}

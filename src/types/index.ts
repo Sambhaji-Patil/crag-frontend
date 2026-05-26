@@ -41,9 +41,15 @@ export interface IngestJob {
   status: 'processing' | 'done' | 'failed'
   collection_name: string
   filename: string
+  embedding_mode?: string
   chunks_created: number
   message: string
   progress: number
+}
+
+export interface EmbeddingInfo {
+  default_mode: string
+  device: string
 }
 
 export interface IngestedDoc {

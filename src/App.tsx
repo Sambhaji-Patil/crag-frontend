@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Header } from './components/Header'
 import { WorkspacePanel } from './components/WorkspacePanel'
 import { ChatPanel } from './components/ChatPanel'
@@ -10,7 +10,7 @@ import { EmbeddingVizModal } from './components/EmbeddingVizModal'
 import { EmbeddingVizProvider } from './contexts/EmbeddingVizContext'
 import { useSession } from './hooks/useSession'
 import { useTheme } from './hooks/useTheme'
-import { streamPipeline } from './lib/api'
+import { streamPipeline, fetchEmbeddingInfo } from './lib/api'
 import type { ChatMessage, IngestedDoc, PipelineStep, Source } from './types'
 
 function uuid() {
@@ -31,6 +31,11 @@ export default function App() {
   // Retrieval mode
   const [retrievalMode, setRetrievalMode] = useState('hybrid')
 
+  // Embedding mode
+  const [embeddingMode, setEmbeddingMode] = useState('bge-large')
+  const [embeddingRecommendedMode, setEmbeddingRecommendedMode] = useState('bge-large')
+  const [embeddingDevice, setEmbeddingDevice] = useState<string | undefined>(undefined)
+
   // Resizable panel widths (px)
   const [leftWidth, setLeftWidth] = useState(280)
   const [rightWidth, setRightWidth] = useState(320)
@@ -41,6 +46,23 @@ export default function App() {
 
   const handleResizeRight = useCallback((delta: number) => {
     setRightWidth((w) => Math.max(200, Math.min(480, w - delta)))
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    fetchEmbeddingInfo()
+      .then((info) => {
+        if (!active) return
+        setEmbeddingMode(info.default_mode)
+        setEmbeddingRecommendedMode(info.default_mode)
+        setEmbeddingDevice(info.device)
+      })
+      .catch(() => {
+        // keep fallback defaults
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   async function handleQuery(query: string) {
@@ -65,7 +87,14 @@ export default function App() {
         .filter((d) => d.status === 'done' && d.collection)
         .map((d) => d.collection!)
 
-      for await (const event of streamPipeline(query, sessionId, history, retrievalMode, docCollections)) {
+      for await (const event of streamPipeline(
+        query,
+        sessionId,
+        history,
+        retrievalMode,
+        docCollections,
+        embeddingMode
+      )) {
         const step: PipelineStep = {
           event: event.event,
           status: event.status,
@@ -130,6 +159,7 @@ export default function App() {
           sessionId={sessionId}
           docs={docs}
           onDocsChange={setDocs}
+          embeddingMode={embeddingMode}
           style={{ width: leftWidth, flexShrink: 0 }}
         />
 
@@ -144,6 +174,10 @@ export default function App() {
           onQuery={handleQuery}
           retrievalMode={retrievalMode}
           onRetrievalModeChange={setRetrievalMode}
+          embeddingMode={embeddingMode}
+          onEmbeddingModeChange={setEmbeddingMode}
+          embeddingRecommendedMode={embeddingRecommendedMode}
+          embeddingDevice={embeddingDevice}
           docs={docs}
         />
 

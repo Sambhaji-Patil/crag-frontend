@@ -13,6 +13,10 @@ interface Props {
   onQuery: (query: string) => void
   retrievalMode: string
   onRetrievalModeChange: (mode: string) => void
+  embeddingMode: string
+  onEmbeddingModeChange: (mode: string) => void
+  embeddingRecommendedMode?: string
+  embeddingDevice?: string
   docs: IngestedDoc[]
 }
 
@@ -24,6 +28,10 @@ export function ChatPanel({
   onQuery,
   retrievalMode,
   onRetrievalModeChange,
+  embeddingMode,
+  onEmbeddingModeChange,
+  embeddingRecommendedMode,
+  embeddingDevice,
   docs,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -70,7 +78,7 @@ export function ChatPanel({
             {/* Feature pills */}
             <div className="flex flex-wrap gap-2 justify-center max-w-sm">
               {[
-                'BGE-large embeddings',
+                'Adaptive embeddings (BGE/OpenAI)',
                 'Hybrid RRF retrieval',
                 'Cross-encoder reranking',
                 'Parent-child context',
@@ -124,6 +132,10 @@ export function ChatPanel({
         hasDocuments={hasDocuments}
         retrievalMode={retrievalMode}
         onRetrievalModeChange={onRetrievalModeChange}
+        embeddingMode={embeddingMode}
+        onEmbeddingModeChange={onEmbeddingModeChange}
+        embeddingRecommendedMode={embeddingRecommendedMode}
+        embeddingDevice={embeddingDevice}
         onQueryChange={setLiveQuery}
       />
     </main>
