@@ -51,7 +51,9 @@ export function QueryInput({
   onQueryChange,
 }: Props) {
   const [value, setValue] = useState('')
+  const [embedLockMessage, setEmbedLockMessage] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const lockTimerRef = useRef<number | null>(null)
 
   function handleSubmit() {
     const q = value.trim()
@@ -78,6 +80,14 @@ export function QueryInput({
     el.style.height = Math.min(el.scrollHeight, 160) + 'px'
   }, [value])
 
+  useEffect(() => {
+    return () => {
+      if (lockTimerRef.current !== null) {
+        window.clearTimeout(lockTimerRef.current)
+      }
+    }
+  }, [])
+
   const placeholder = !hasDocuments
     ? 'Upload documents first…'
     : disabled
@@ -89,6 +99,17 @@ export function QueryInput({
     : embeddingDevice === 'cpu'
     ? 'CPU'
     : 'this system'
+  const embeddingLocked = hasDocuments
+
+  function notifyEmbeddingLocked() {
+    setEmbedLockMessage('Embeddings are locked for this session. Start a new session to change them.')
+    if (lockTimerRef.current !== null) {
+      window.clearTimeout(lockTimerRef.current)
+    }
+    lockTimerRef.current = window.setTimeout(() => {
+      setEmbedLockMessage('')
+    }, 3000)
+  }
 
   return (
     <div className="border-t-2 border-zinc-200 dark:border-zinc-800 p-4 flex-shrink-0 bg-zinc-50 dark:bg-zinc-950">
@@ -129,7 +150,13 @@ export function QueryInput({
           return (
             <button
               key={e.id}
-              onClick={() => onEmbeddingModeChange(e.id)}
+              onClick={() => {
+                if (embeddingLocked && !isActive) {
+                  notifyEmbeddingLocked()
+                  return
+                }
+                onEmbeddingModeChange(e.id)
+              }}
               disabled={disabled}
               title={title}
               className={`
@@ -140,6 +167,7 @@ export function QueryInput({
                   : 'border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 bg-transparent hover:border-zinc-400 dark:hover:border-zinc-600'
                 }
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                ${embeddingLocked && !isActive ? 'opacity-40 blur-[0.6px]' : ''}
               `}
             >
               {e.label}
@@ -147,6 +175,9 @@ export function QueryInput({
           )
         })}
       </div>
+      {embedLockMessage && (
+        <p className="label-upper text-amber-600 mb-3">{embedLockMessage}</p>
+      )}
 
       {/* Input row */}
       <div className={`
