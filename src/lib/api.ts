@@ -1,6 +1,22 @@
 import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult, TryDoc, RetrievalSettings } from '../types'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://quantumbit-crag.hf.space'
+const API_BEARER_TOKEN = import.meta.env.VITE_API_BEARER_TOKEN ?? ''
+
+function authHeaders(initHeaders: HeadersInit = {}): Headers {
+  const headers = new Headers(initHeaders)
+  if (API_BEARER_TOKEN) {
+    headers.set('Authorization', `Bearer ${API_BEARER_TOKEN}`)
+  }
+  return headers
+}
+
+function authFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  return fetch(input, {
+    ...init,
+    headers: authHeaders(init.headers ?? {}),
+  })
+}
 
 // ── Query pipeline ──────────────────────────────────────────────────────────
 
@@ -13,7 +29,7 @@ export async function* streamPipeline(
   embeddingMode: string = 'auto',
   retrievalSettings?: RetrievalSettings
 ): AsyncGenerator<PipelineEvent> {
-  const res = await fetch(`${API_BASE}/query/pipeline`, {
+  const res = await authFetch(`${API_BASE}/query/pipeline`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -72,11 +88,11 @@ export async function uploadFile(
   const form = new FormData()
   form.append('file', file)
 
-  const res = await fetch(
+  const res = await authFetch(
     `${API_BASE}/ingest/file?collection_name=${encodeURIComponent(sessionId)}&embedding_mode=${encodeURIComponent(embeddingMode)}`,
     {
-    method: 'POST',
-    body: form,
+      method: 'POST',
+      body: form,
     }
   )
 
@@ -92,25 +108,55 @@ export function watchIngestJob(
   jobId: string,
   onUpdate: (job: IngestJob) => void
 ): () => void {
-  const es = new EventSource(`${API_BASE}/ingest/jobs/${jobId}/events`)
+  const controller = new AbortController()
 
-  es.onmessage = (e) => {
-    try {
-      onUpdate(JSON.parse(e.data) as IngestJob)
-    } catch {
-      // ignore
+  void (async () => {
+    const res = await authFetch(`${API_BASE}/ingest/jobs/${jobId}/events`, {
+      signal: controller.signal,
+    })
+
+    if (!res.ok || !res.body) {
+      return
     }
-  }
 
-  es.onerror = () => es.close()
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
 
-  return () => es.close()
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const raw = line.slice(6).trim()
+          if (!raw) continue
+          try {
+            onUpdate(JSON.parse(raw) as IngestJob)
+          } catch {
+            // ignore malformed event payloads
+          }
+        }
+      }
+    } catch {
+      // stream closed or aborted
+    } finally {
+      reader.releaseLock()
+    }
+  })()
+
+  return () => controller.abort()
 }
 
 // ── Embeddings ─────────────────────────────────────────────────────────────
 
 export async function fetchEmbeddingInfo(): Promise<{ default_mode: string; device: string }> {
-  const res = await fetch(`${API_BASE}/embeddings/info`)
+  const res = await authFetch(`${API_BASE}/embeddings/info`)
   if (!res.ok) throw new Error(`Embeddings info failed: ${res.status}`)
   return res.json() as Promise<{ default_mode: string; device: string }>
 }
@@ -118,7 +164,7 @@ export async function fetchEmbeddingInfo(): Promise<{ default_mode: string; devi
 // ── Try Docs ───────────────────────────────────────────────────────────────
 
 export async function fetchTryDocs(): Promise<TryDoc[]> {
-  const res = await fetch(`${API_BASE}/try_docs`)
+  const res = await authFetch(`${API_BASE}/try_docs`)
   if (!res.ok) throw new Error(`Try Docs fetch failed: ${res.status}`)
   const data = await res.json() as { docs: TryDoc[] }
   return data.docs
@@ -127,7 +173,7 @@ export async function fetchTryDocs(): Promise<TryDoc[]> {
 // ── Visualization ────────────────────────────────────────────────────────────
 
 export async function fetchCollectionViz(collection: string): Promise<VizPoint[]> {
-  const res = await fetch(`${API_BASE}/collections/${encodeURIComponent(collection)}/viz`)
+  const res = await authFetch(`${API_BASE}/collections/${encodeURIComponent(collection)}/viz`)
   if (!res.ok) throw new Error(`Viz fetch failed: ${res.status}`)
   const data = await res.json()
   return data.points as VizPoint[]
@@ -138,7 +184,7 @@ export async function fetchQuerySimilarity(
   query: string,
   signal?: AbortSignal
 ): Promise<QuerySimilarityResult> {
-  const res = await fetch(
+  const res = await authFetch(
     `${API_BASE}/collections/${encodeURIComponent(collection)}/query_similarity`,
     {
       method: 'POST',
