@@ -194,6 +194,19 @@ function StepDetail({ step }: { step: PipelineStep }) {
     )
   }
 
+  if (step.event === 'cache_check') {
+    const label = step.status === 'hit'
+      ? 'cache hit'
+      : step.status === 'miss'
+      ? 'cache miss'
+      : 'cache skipped'
+    return (
+      <p className={`font-mono text-[10px] mt-1 ${step.status === 'hit' ? 'text-emerald-500 dark:text-emerald-400' : step.status === 'miss' ? 'text-amber-500 dark:text-amber-400' : 'text-zinc-500 dark:text-zinc-600'}`}>
+        {label}
+      </p>
+    )
+  }
+
   if (step.event === 'rag_decision') {
     const useRag = Boolean(d.use_rag)
     return (

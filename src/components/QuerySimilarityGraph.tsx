@@ -293,9 +293,10 @@ export function QuerySimilarityGraph({ collection, queryText }: Props) {
                 key={`pulse-${docId}`}
                 cx={p.svgX} cy={p.svgY}
                 fill="none" stroke="#7C3AED" strokeWidth="1.2"
-                style={{ pointerEvents: 'none' }}
-                initial={{ r: C_R_TOP, opacity: 0.65 }}
-                animate={{ r: C_R_TOP + 10, opacity: 0 }}
+                r={C_R_TOP}
+                style={{ pointerEvents: 'none', transformBox: 'fill-box', transformOrigin: 'center' }}
+                initial={{ opacity: 0.65, scale: 1 }}
+                animate={{ opacity: 0, scale: 2.6 }}
                 transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 0.4, delay: rank * 0.12, ease: 'easeOut' }}
               />
             )
@@ -315,9 +316,10 @@ export function QuerySimilarityGraph({ collection, queryText }: Props) {
               fill={color}
               stroke={isTop && queryPos ? '#7C3AED' : 'none'}
               strokeWidth="1.2"
-              r={3.8}
+              r={Number.isFinite(r) ? r : 3.8}
               fillOpacity={0.9}
-              animate={{ r, fillOpacity: queryPos && !isTop ? 0.32 : 0.9 }}
+              style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+              animate={{ scale: queryPos ? (isTop ? 1 : Math.max(0.88, r / 3.8)) : 1, fillOpacity: queryPos && !isTop ? 0.32 : 0.9 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               onMouseEnter={() => setHovered(p)}
               onMouseLeave={() => setHovered(null)}
@@ -351,7 +353,9 @@ export function QuerySimilarityGraph({ collection, queryText }: Props) {
             <>
               <motion.circle key="halo" cx={queryPos.svgX} cy={queryPos.svgY}
                 fill="url(#qs-glow)"
-                initial={{ r: 0, opacity: 0 }} animate={{ r: 20, opacity: 1 }} exit={{ r: 0, opacity: 0 }}
+                r={20}
+                style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }}
                 transition={{ duration: 0.3 }} />
               <motion.circle key="dot" fill="#7C3AED" r={Q_R} stroke="#fff" strokeWidth="1.5"
                 initial={{ cx: queryPos.svgX, cy: queryPos.svgY, opacity: 0, scale: 0 }}

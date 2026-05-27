@@ -238,10 +238,11 @@ export function EmbeddingVizModal() {
                       fillOpacity={hovered ? (hovered.doc_id === p.doc_id ? 1 : 0.28) : 0.85}
                       stroke={hovered?.doc_id === p.doc_id ? (isDark ? '#fff' : '#18181b') : 'none'}
                       strokeWidth="1.5"
-                      initial={{ opacity: 0, r: 0 }}
-                      animate={{ opacity: 1, r: hovered?.doc_id === p.doc_id ? 7 : 5 }}
+                      r={hovered?.doc_id === p.doc_id ? 7 : 5}
+                      style={{ cursor: 'pointer', transformBox: 'fill-box', transformOrigin: 'center' }}
+                      initial={{ opacity: 0, scale: 0.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.005, duration: 0.22 }}
-                      style={{ cursor: 'pointer' }}
                       onMouseEnter={() => setHovered(p)}
                       onMouseLeave={() => setHovered(null)}
                     />

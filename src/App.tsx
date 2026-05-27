@@ -94,7 +94,6 @@ export default function App() {
       const docCollections = docs
         .filter((d) => d.status === 'done' && d.collection)
         .map((d) => d.collection!)
-      const tryDocsOnly = docCollections.length > 0 && docCollections.every((c) => c.startsWith('try__'))
 
       for await (const event of streamPipeline(
         query,
@@ -105,15 +104,9 @@ export default function App() {
         embeddingMode,
         retrievalSettings
       )) {
-        if (event.event === 'cache_check' && !tryDocsOnly) {
-          continue
-        }
-
         const step: PipelineStep = {
           event: event.event,
-          status: event.event === 'cache_check' && event.status === 'skipped' && tryDocsOnly
-            ? 'miss'
-            : event.status,
+          status: event.status,
           data: event.data,
           arrivedAt: performance.now(),
         }
