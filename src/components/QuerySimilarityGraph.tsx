@@ -294,10 +294,10 @@ export function QuerySimilarityGraph({ collection, queryText }: Props) {
                 cx={p.svgX} cy={p.svgY}
                 fill="none" stroke="#7C3AED" strokeWidth="1.2"
                 r={C_R_TOP}
-                style={{ pointerEvents: 'none', transformBox: 'fill-box', transformOrigin: 'center' }}
-                initial={{ opacity: 0.65, scale: 1 }}
-                animate={{ opacity: 0, scale: 2.6 }}
-                transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 0.4, delay: rank * 0.12, ease: 'easeOut' }}
+                style={{ pointerEvents: 'none' }}
+                initial={{ opacity: 0.15 }}
+                animate={{ opacity: [0.15, 0.9, 0.15] }}
+                transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 0.25, delay: rank * 0.12, ease: 'easeInOut' }}
               />
             )
           })}
