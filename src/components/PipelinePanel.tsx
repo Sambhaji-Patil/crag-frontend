@@ -6,6 +6,7 @@ const STEP_META: Record<string, { label: string; icon: string }> = {
   pipeline_start:    { label: 'INIT',             icon: '◈' },
   guardrail_check:   { label: 'SAFETY CHECK',     icon: '⬡' },
   cache_check:       { label: 'CACHE',            icon: '⬡' },
+  rag_decision:      { label: 'ROUTING',          icon: '⬡' },
   doc_routing:       { label: 'DOC ROUTING',       icon: '⬡' },
   query_rewrite:     { label: 'QUERY REWRITE',    icon: '⬡' },
   retrieval_start:   { label: 'RETRIEVAL',        icon: '⬡' },
@@ -189,6 +190,15 @@ function StepDetail({ step }: { step: PipelineStep }) {
     return (
       <p className="font-mono text-[10px] text-zinc-500 mt-1">
         {String(d.type)} cache
+      </p>
+    )
+  }
+
+  if (step.event === 'rag_decision') {
+    const useRag = Boolean(d.use_rag)
+    return (
+      <p className={`font-mono text-[10px] mt-1 ${useRag ? 'text-zinc-500' : 'text-emerald-500 dark:text-emerald-400'}`}>
+        {useRag ? 'RAG required' : 'History answer'}
       </p>
     )
   }
