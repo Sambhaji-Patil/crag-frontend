@@ -1,7 +1,7 @@
 import type { IngestJob, PipelineEvent, VizPoint, QuerySimilarityResult, TryDoc, RetrievalSettings } from '../types'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://quantumbit-crag.hf.space'
-const API_BEARER_TOKEN = import.meta.env.VITE_API_BEARER_TOKEN ?? ''
+export const API_BEARER_TOKEN = import.meta.env.VITE_API_BEARER_TOKEN ?? ''
 
 function authHeaders(initHeaders: HeadersInit = {}): Headers {
   const headers = new Headers(initHeaders)
